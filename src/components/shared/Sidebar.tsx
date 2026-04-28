@@ -7,17 +7,17 @@ import {
   GraduationCap, LayoutDashboard, Users, UserCheck, BookOpen,
   ClipboardList, Calendar, FileText, DollarSign, Library, Bus,
   Home, MessageSquare, Bell, BarChart3, Settings, ChevronDown,
-  ChevronRight, LogOut, Menu,
+  ChevronRight, LogOut, Menu, BookMarked, Award, CreditCard,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth.store';
 import { useSidebarStore } from '@/store/sidebar.store';
-import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { getInitials } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+
 
 interface NavItem {
   label: string;
@@ -27,15 +27,17 @@ interface NavItem {
   children?: NavItem[];
 }
 
-const NAV_ITEMS: NavItem[] = [
+// ─── Role-specific nav configs ────────────────────────────────────────────────
+
+const ADMIN_NAV: NavItem[] = [
   { label: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   {
     label: 'Students', icon: Users,
     children: [
-      { label: 'All Students',  href: '/admin/students',             icon: Users },
-      { label: 'Enrollment',    href: '/admin/students/enroll',      icon: UserCheck },
-      { label: 'Promotions',    href: '/admin/students/promotions',  icon: ChevronRight },
-      { label: 'Alumni',        href: '/admin/students/alumni',      icon: GraduationCap },
+      { label: 'All Students',  href: '/admin/students',            icon: Users },
+      { label: 'Enrollment',    href: '/admin/students/enroll',     icon: UserCheck },
+      { label: 'Promotions',    href: '/admin/students/promotions', icon: ChevronRight },
+      { label: 'Alumni',        href: '/admin/students/alumni',     icon: GraduationCap },
     ],
   },
   {
@@ -50,21 +52,21 @@ const NAV_ITEMS: NavItem[] = [
   {
     label: 'Academics', icon: BookOpen,
     children: [
-      { label: 'Classes',       href: '/admin/classes',     icon: BookOpen },
-      { label: 'Subjects',      href: '/admin/subjects',    icon: FileText },
-      { label: 'Timetable',     href: '/admin/timetable',   icon: Calendar },
-      { label: 'Lesson Plans',  href: '/admin/lessons',     icon: ClipboardList },
-      { label: 'Assignments',   href: '/admin/assignments', icon: FileText },
+      { label: 'Classes',      href: '/admin/classes',     icon: BookOpen },
+      { label: 'Subjects',     href: '/admin/subjects',    icon: FileText },
+      { label: 'Timetable',    href: '/admin/timetable',   icon: Calendar },
+      { label: 'Lesson Plans', href: '/admin/lessons',     icon: ClipboardList },
+      { label: 'Assignments',  href: '/admin/assignments', icon: FileText },
     ],
   },
   { label: 'Attendance', href: '/admin/attendance', icon: ClipboardList },
   {
     label: 'Examinations', icon: FileText,
     children: [
-      { label: 'Exam Schedule', href: '/admin/exams',               icon: Calendar },
-      { label: 'Mark Entry',    href: '/admin/exams/marks',         icon: FileText },
-      { label: 'Report Cards',  href: '/admin/exams/report-cards',  icon: FileText },
-      { label: 'Hall Tickets',  href: '/admin/exams/hall-tickets',  icon: FileText },
+      { label: 'Exam Schedule', href: '/admin/exams',              icon: Calendar },
+      { label: 'Mark Entry',    href: '/admin/exams/marks',        icon: FileText },
+      { label: 'Report Cards',  href: '/admin/exams/report-cards', icon: FileText },
+      { label: 'Hall Tickets',  href: '/admin/exams/hall-tickets', icon: FileText },
     ],
   },
   {
@@ -92,10 +94,69 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 
-function NavItemComponent({
-  item, depth = 0, onNavigate,
-}: {
-  item: NavItem; depth?: number; onNavigate: () => void;
+const TEACHER_NAV: NavItem[] = [
+  { label: 'Dashboard',   href: '/teacher',             icon: LayoutDashboard },
+  { label: 'My Classes',  href: '/teacher/classes',     icon: BookOpen },
+  { label: 'Attendance',  href: '/teacher/attendance',  icon: ClipboardList },
+  { label: 'Assignments', href: '/teacher/assignments', icon: FileText },
+  { label: 'Mark Entry',  href: '/teacher/marks',       icon: Award },
+  { label: 'Timetable',   href: '/teacher/timetable',   icon: Calendar },
+  { label: 'Leave',       href: '/teacher/leave',       icon: Calendar },
+  { label: 'Messages',    href: '/teacher/messages',    icon: MessageSquare },
+];
+
+const STUDENT_NAV: NavItem[] = [
+  { label: 'Dashboard',   href: '/student',             icon: LayoutDashboard },
+  { label: 'Attendance',  href: '/student/attendance',  icon: ClipboardList },
+  { label: 'Timetable',   href: '/student/timetable',   icon: Calendar },
+  { label: 'Assignments', href: '/student/assignments', icon: FileText },
+  { label: 'Exams',       href: '/student/exams',       icon: Award },
+  { label: 'Fees',        href: '/student/fees',        icon: CreditCard },
+  { label: 'Library',     href: '/student/library',     icon: Library },
+  { label: 'Messages',    href: '/student/messages',    icon: MessageSquare },
+];
+
+const PARENT_NAV: NavItem[] = [
+  { label: 'Dashboard',  href: '/parent',             icon: LayoutDashboard },
+  { label: 'Attendance', href: '/parent/attendance',  icon: ClipboardList },
+  { label: 'Fees',       href: '/parent/fees',        icon: CreditCard },
+  { label: 'Results',    href: '/parent/results',     icon: Award },
+  { label: 'Timetable',  href: '/parent/timetable',   icon: Calendar },
+  { label: 'Messages',   href: '/parent/messages',    icon: MessageSquare },
+];
+
+const ACCOUNTANT_NAV: NavItem[] = [
+  { label: 'Dashboard',      href: '/accountant',          icon: LayoutDashboard },
+  { label: 'Collect Fee',    href: '/accountant/collect',  icon: CreditCard },
+  { label: 'Invoices',       href: '/accountant/invoices', icon: FileText },
+  { label: 'Payments',       href: '/accountant/payments', icon: DollarSign },
+  { label: 'Expenses',       href: '/accountant/expenses', icon: BarChart3 },
+  { label: 'Reports',        href: '/accountant/reports',  icon: BarChart3 },
+];
+
+const LIBRARIAN_NAV: NavItem[] = [
+  { label: 'Dashboard', href: '/librarian',          icon: LayoutDashboard },
+  { label: 'Books',     href: '/librarian/books',    icon: BookMarked },
+  { label: 'Issue / Return', href: '/librarian/issue', icon: BookOpen },
+  { label: 'Members',   href: '/librarian/members',  icon: Users },
+  { label: 'Reports',   href: '/librarian/reports',  icon: BarChart3 },
+];
+
+function getNavForRole(role: string | undefined): NavItem[] {
+  if (!role) return ADMIN_NAV;
+  if (['SUPER_ADMIN', 'SCHOOL_ADMIN', 'PRINCIPAL', 'TRANSPORT_MANAGER', 'HOSTEL_WARDEN', 'STAFF'].includes(role)) return ADMIN_NAV;
+  if (role === 'TEACHER') return TEACHER_NAV;
+  if (role === 'STUDENT') return STUDENT_NAV;
+  if (role === 'PARENT')  return PARENT_NAV;
+  if (role === 'ACCOUNTANT') return ACCOUNTANT_NAV;
+  if (role === 'LIBRARIAN')  return LIBRARIAN_NAV;
+  return ADMIN_NAV;
+}
+
+// ─── Nav item component ────────────────────────────────────────────────────────
+
+function NavItemComponent({ item, depth = 0, onNavigate, rootPrefix }: {
+  item: NavItem; depth?: number; onNavigate: () => void; rootPrefix: string;
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(() =>
@@ -103,7 +164,7 @@ function NavItemComponent({
   );
 
   const isActive = item.href
-    ? pathname === item.href || (item.href !== '/admin' && pathname.startsWith(`${item.href}/`))
+    ? pathname === item.href || (item.href !== `/${rootPrefix}` && pathname.startsWith(`${item.href}/`))
     : false;
   const Icon = item.icon;
 
@@ -125,7 +186,7 @@ function NavItemComponent({
         {open && (
           <div className="mt-1 space-y-0.5">
             {item.children.map((child) => (
-              <NavItemComponent key={child.label} item={child} depth={depth + 1} onNavigate={onNavigate} />
+              <NavItemComponent key={child.label} item={child} depth={depth + 1} onNavigate={onNavigate} rootPrefix={rootPrefix} />
             ))}
           </div>
         )}
@@ -156,13 +217,20 @@ function NavItemComponent({
   );
 }
 
-function SidebarContent({
-  collapsed, onToggleCollapse, onNavigate,
-}: {
+// ─── Sidebar content ───────────────────────────────────────────────────────────
+
+function SidebarContent({ collapsed, onToggleCollapse, onNavigate }: {
   collapsed: boolean; onToggleCollapse: () => void; onNavigate: () => void;
 }) {
   const { user, logout } = useAuthStore();
   const router = useRouter();
+  const navItems = getNavForRole(user?.role);
+  const rootPrefix = (user?.role === 'TEACHER' ? 'teacher'
+    : user?.role === 'STUDENT' ? 'student'
+    : user?.role === 'PARENT' ? 'parent'
+    : user?.role === 'ACCOUNTANT' ? 'accountant'
+    : user?.role === 'LIBRARIAN' ? 'librarian'
+    : 'admin');
 
   async function handleLogout() {
     await logout();
@@ -194,15 +262,14 @@ function SidebarContent({
       {/* Nav */}
       <ScrollArea className="flex-1 px-3 py-4">
         <nav className="space-y-0.5">
-          {NAV_ITEMS.map((item) => (
-            <NavItemComponent key={item.label} item={item} onNavigate={onNavigate} />
+          {navItems.map((item) => (
+            <NavItemComponent key={item.label} item={item} onNavigate={onNavigate} rootPrefix={rootPrefix} />
           ))}
         </nav>
       </ScrollArea>
 
       {/* User footer */}
       <div className="shrink-0 border-t dark:border-gray-800">
-        {/* User info */}
         <div className="flex items-center gap-3 px-4 pt-4 pb-2">
           <Avatar className="h-8 w-8 shrink-0">
             <AvatarImage src={user?.avatar ?? undefined} />
@@ -216,12 +283,11 @@ function SidebarContent({
                 {user?.firstName} {user?.lastName}
               </p>
               <p className="truncate text-xs text-muted-foreground capitalize">
-                {user?.role?.replace('_', ' ').toLowerCase() ?? 'User'}
+                {user?.role?.replace(/_/g, ' ').toLowerCase() ?? 'User'}
               </p>
             </div>
           )}
         </div>
-        {/* Logout button */}
         <div className="px-3 pb-4">
           <button
             onClick={handleLogout}
@@ -236,43 +302,27 @@ function SidebarContent({
   );
 }
 
+// ─── Exported Sidebar ──────────────────────────────────────────────────────────
+
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const { mobileOpen, closeMobile } = useSidebarStore();
 
   return (
     <>
-      {/* Desktop sidebar */}
-      <aside
-        className={cn(
-          'hidden lg:flex flex-col border-r bg-white dark:bg-gray-900 dark:border-gray-800 transition-all duration-200 shrink-0',
-          collapsed ? 'w-16' : 'w-64'
-        )}
-      >
-        <SidebarContent
-          collapsed={collapsed}
-          onToggleCollapse={() => setCollapsed(!collapsed)}
-          onNavigate={() => {}}
-        />
+      <aside className={cn(
+        'hidden lg:flex flex-col border-r bg-white dark:bg-gray-900 dark:border-gray-800 transition-all duration-200 shrink-0',
+        collapsed ? 'w-16' : 'w-64'
+      )}>
+        <SidebarContent collapsed={collapsed} onToggleCollapse={() => setCollapsed(!collapsed)} onNavigate={() => {}} />
       </aside>
 
-      {/* Mobile overlay */}
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" onClick={closeMobile} />
           <aside className="fixed inset-y-0 left-0 z-50 w-72 bg-white dark:bg-gray-900 shadow-2xl">
-            {/* Close button */}
-            <button
-              onClick={closeMobile}
-              className="absolute right-4 top-4 z-10 rounded-md p-1 text-muted-foreground hover:text-foreground text-xl leading-none"
-            >
-              ✕
-            </button>
-            <SidebarContent
-              collapsed={false}
-              onToggleCollapse={() => {}}
-              onNavigate={closeMobile}
-            />
+            <button onClick={closeMobile} className="absolute right-4 top-4 z-10 rounded-md p-1 text-muted-foreground hover:text-foreground text-xl leading-none">✕</button>
+            <SidebarContent collapsed={false} onToggleCollapse={() => {}} onNavigate={closeMobile} />
           </aside>
         </div>
       )}
