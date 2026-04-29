@@ -4,29 +4,32 @@ import { useState } from 'react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Search, Send, Circle } from 'lucide-react';
 import { getInitials, timeAgo } from '@/lib/utils';
 import Link from 'next/link';
 
-const MOCK_MESSAGES = [
-  { id:'1', from:'Dr. Sarah Mitchell', role:'Teacher',   subject:'Student Progress — Emma R.',  preview:'I wanted to discuss Emma\'s recent performance in mathematics...', time: new Date(Date.now()-1000*60*10), read:false },
-  { id:'2', from:'Carlos Rodriguez',   role:'Parent',    subject:'Fee Payment Query',            preview:'Hello, I have a question about the latest fee invoice...', time: new Date(Date.now()-1000*60*60), read:false },
-  { id:'3', from:'Principal Office',   role:'Principal', subject:'Staff Meeting — 23rd April',   preview:'This is to inform all staff that there will be a meeting...', time: new Date(Date.now()-1000*60*60*3), read:true },
-  { id:'4', from:'Mr. James Chen',     role:'Teacher',   subject:'Lab Equipment Request',         preview:'We need to procure new lab equipment for the physics...', time: new Date(Date.now()-1000*60*60*5), read:true },
-  { id:'5', from:'Priya Sharma',       role:'Teacher',   subject:'Leave Application',             preview:'I would like to request a 2-day leave for personal...', time: new Date(Date.now()-1000*60*60*24), read:true },
-];
+function buildMessages() {
+  const now = Date.now();
+  return [
+    { id:'1', from:'Dr. Sarah Mitchell', role:'Teacher',   subject:'Student Progress — Emma R.',  preview:'I wanted to discuss Emma\'s recent performance in mathematics...', time: new Date(now-1000*60*10), read:false },
+    { id:'2', from:'Carlos Rodriguez',   role:'Parent',    subject:'Fee Payment Query',            preview:'Hello, I have a question about the latest fee invoice...', time: new Date(now-1000*60*60), read:false },
+    { id:'3', from:'Principal Office',   role:'Principal', subject:'Staff Meeting — 23rd April',   preview:'This is to inform all staff that there will be a meeting...', time: new Date(now-1000*60*60*3), read:true },
+    { id:'4', from:'Mr. James Chen',     role:'Teacher',   subject:'Lab Equipment Request',         preview:'We need to procure new lab equipment for the physics...', time: new Date(now-1000*60*60*5), read:true },
+    { id:'5', from:'Priya Sharma',       role:'Teacher',   subject:'Leave Application',             preview:'I would like to request a 2-day leave for personal...', time: new Date(now-1000*60*60*24), read:true },
+  ];
+}
 
 export default function MessagesPage() {
+  const [messages] = useState(buildMessages);
   const [search, setSearch] = useState('');
-  const [selected, setSelected] = useState(MOCK_MESSAGES[0]);
-  const filtered = MOCK_MESSAGES.filter(m=>
+  const [selected, setSelected] = useState(() => buildMessages()[0]);
+  const filtered = messages.filter(m=>
     m.from.toLowerCase().includes(search.toLowerCase()) ||
     m.subject.toLowerCase().includes(search.toLowerCase())
   );
-  const unread = MOCK_MESSAGES.filter(m=>!m.read).length;
+  const unread = messages.filter(m=>!m.read).length;
 
   return (
     <div className="space-y-6">
@@ -67,7 +70,7 @@ export default function MessagesPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
                       <span className={`text-xs truncate ${!m.read?'font-bold text-gray-900 dark:text-white':'font-medium text-gray-700 dark:text-gray-300'}`}>{m.from}</span>
-                      <span className="text-[10px] text-muted-foreground ml-1 shrink-0">{timeAgo(m.time)}</span>
+                      <span suppressHydrationWarning className="text-[10px] text-muted-foreground ml-1 shrink-0">{timeAgo(m.time)}</span>
                     </div>
                     <p className={`text-xs truncate mt-0.5 ${!m.read?'font-medium text-gray-800 dark:text-gray-200':'text-muted-foreground'}`}>{m.subject}</p>
                     <p className="text-[11px] text-muted-foreground truncate mt-0.5">{m.preview}</p>

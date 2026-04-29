@@ -4,17 +4,20 @@ import { useState } from 'react';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Plus, Megaphone, Pin, Users, GraduationCap, UserCheck } from 'lucide-react';
 import { timeAgo } from '@/lib/utils';
 
-const ANNOUNCEMENTS = [
-  { id:'1', title:'School Annual Sports Day — May 10, 2026',      body:'We are pleased to announce that the Annual Sports Day will be held on Saturday, May 10, 2026. All students must participate in at least one event. Registration forms will be distributed in class.', audience:'Everyone', priority:'HIGH',   pinned:true,  date: new Date(Date.now()-1000*60*60*2), author:'Principal Office' },
-  { id:'2', title:'Mid-Term Exam Schedule Released',              body:'The mid-term examination schedule for all grades has been released. Students can collect their hall tickets from the school office starting April 22. Exams begin April 25.', audience:'Students', priority:'HIGH',   pinned:true,  date: new Date(Date.now()-1000*60*60*5), author:'Exam Committee' },
-  { id:'3', title:'Staff Meeting — April 23 at 2:00 PM',         body:'All teaching staff are requested to attend the mandatory staff meeting on April 23, 2026 at 2:00 PM in the Conference Room. Attendance is compulsory.', audience:'Staff',    priority:'MEDIUM', pinned:false, date: new Date(Date.now()-1000*60*60*8), author:'Admin Office' },
-  { id:'4', title:'Fee Payment Deadline — April 30',             body:'This is a reminder that the last date for fee payment for the current term is April 30, 2026. A late fee of ₹500 will be charged after the due date.', audience:'Parents',  priority:'MEDIUM', pinned:false, date: new Date(Date.now()-1000*60*60*24), author:'Accounts Dept.' },
-  { id:'5', title:'Library Closed April 21–22 for Maintenance',  body:'The school library will remain closed on April 21 and 22 for annual maintenance and cataloguing. It will reopen on April 23 with updated inventory.', audience:'Everyone', priority:'LOW',    pinned:false, date: new Date(Date.now()-1000*60*60*48), author:'Library Dept.' },
-];
+function buildAnnouncements() {
+  const now = Date.now();
+  return [
+    { id:'1', title:'School Annual Sports Day — May 10, 2026',      body:'We are pleased to announce that the Annual Sports Day will be held on Saturday, May 10, 2026. All students must participate in at least one event. Registration forms will be distributed in class.', audience:'Everyone', priority:'HIGH',   pinned:true,  date: new Date(now-1000*60*60*2),  author:'Principal Office' },
+    { id:'2', title:'Mid-Term Exam Schedule Released',              body:'The mid-term examination schedule for all grades has been released. Students can collect their hall tickets from the school office starting April 22. Exams begin April 25.', audience:'Students', priority:'HIGH',   pinned:true,  date: new Date(now-1000*60*60*5),  author:'Exam Committee' },
+    { id:'3', title:'Staff Meeting — April 23 at 2:00 PM',         body:'All teaching staff are requested to attend the mandatory staff meeting on April 23, 2026 at 2:00 PM in the Conference Room. Attendance is compulsory.', audience:'Staff',    priority:'MEDIUM', pinned:false, date: new Date(now-1000*60*60*8),  author:'Admin Office' },
+    { id:'4', title:'Fee Payment Deadline — April 30',             body:'This is a reminder that the last date for fee payment for the current term is April 30, 2026. A late fee of ₹500 will be charged after the due date.', audience:'Parents',  priority:'MEDIUM', pinned:false, date: new Date(now-1000*60*60*24), author:'Accounts Dept.' },
+    { id:'5', title:'Library Closed April 21–22 for Maintenance',  body:'The school library will remain closed on April 21 and 22 for annual maintenance and cataloguing. It will reopen on April 23 with updated inventory.', audience:'Everyone', priority:'LOW',    pinned:false, date: new Date(now-1000*60*60*48), author:'Library Dept.' },
+  ];
+}
 
 const AUDIENCE_ICONS: Record<string, React.ElementType> = { Everyone: Megaphone, Students: GraduationCap, Staff: UserCheck, Parents: Users };
 const PRIORITY_COLORS: Record<string,string> = {
@@ -24,8 +27,9 @@ const PRIORITY_COLORS: Record<string,string> = {
 };
 
 export default function AnnouncementsPage() {
+  const [announcements] = useState(buildAnnouncements);
   const [audience, setAudience] = useState('ALL');
-  const filtered = audience==='ALL' ? ANNOUNCEMENTS : ANNOUNCEMENTS.filter(a=>a.audience===audience);
+  const filtered = audience==='ALL' ? announcements : announcements.filter(a=>a.audience===audience);
 
   return (
     <div className="space-y-6">
@@ -68,7 +72,7 @@ export default function AnnouncementsPage() {
                       <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
                         <span>{a.author}</span>
                         <span>·</span>
-                        <span>{timeAgo(a.date)}</span>
+                        <span suppressHydrationWarning>{timeAgo(a.date)}</span>
                       </div>
                     </div>
                   </div>

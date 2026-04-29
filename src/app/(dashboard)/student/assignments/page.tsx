@@ -1,5 +1,5 @@
 import { PageHeader } from '@/components/shared/PageHeader';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { FileText, Calendar, Clock } from 'lucide-react';
@@ -53,7 +53,7 @@ export default function StudentAssignmentsPage() {
                   <div className="flex flex-wrap gap-3 mt-1 text-xs text-muted-foreground">
                     <span>{a.subject} · {a.teacher}</span>
                     <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />Due {new Date(a.due).toLocaleDateString('en-IN', { dateStyle: 'medium' })}</span>
-                    <span className={`flex items-center gap-1 font-medium ${daysLeft <= 2 ? 'text-red-600' : daysLeft <= 4 ? 'text-amber-600' : 'text-green-600'}`}>
+                    <span suppressHydrationWarning className={`flex items-center gap-1 font-medium ${daysLeft <= 2 ? 'text-red-600' : daysLeft <= 4 ? 'text-amber-600' : 'text-green-600'}`}>
                       <Clock className="h-3 w-3" />{daysLeft} day{daysLeft !== 1 ? 's' : ''} left
                     </span>
                   </div>

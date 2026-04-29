@@ -3,14 +3,14 @@
 import { useState } from 'react';
 import {
   UserPlus, DollarSign, ClipboardList, FileText, AlertCircle,
-  GraduationCap, BookOpen, CheckCircle2, Clock,
+  GraduationCap, BookOpen, Clock,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { timeAgo, getInitials } from '@/lib/utils';
+import { timeAgo } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 
 type ActivityType = 'enrollment' | 'payment' | 'attendance' | 'grade' | 'alert' | 'exam' | 'assignment';
@@ -35,16 +35,19 @@ const ACTIVITY_CONFIG: Record<ActivityType, { icon: React.ElementType; color: st
   assignment:  { icon: BookOpen,       color: 'text-teal-600',   bg: 'bg-teal-50 dark:bg-teal-950' },
 };
 
-const MOCK_ACTIVITIES: Activity[] = [
-  { id: '1', type: 'enrollment',  title: 'New student enrolled', subtitle: 'Emma Rodriguez — Grade 10A', actor: 'EV', time: new Date(Date.now() - 8 * 60000), status: 'success' },
-  { id: '2', type: 'payment',     title: 'Fee payment received', subtitle: '$1,200 — Tuition Q2 · Invoice #INV-202403-0148', actor: 'JS', time: new Date(Date.now() - 22 * 60000), status: 'success' },
-  { id: '3', type: 'attendance',  title: 'Attendance marked — Grade 11B', subtitle: '28 present · 2 absent · 1 late', actor: 'MK', time: new Date(Date.now() - 45 * 60000), status: 'info' },
-  { id: '4', type: 'alert',       title: 'Low attendance alert', subtitle: 'Alex Chen — 68% (below 75% threshold)', actor: 'SYS', time: new Date(Date.now() - 1.2 * 3600000), status: 'warning' },
-  { id: '5', type: 'grade',       title: 'Exam results published', subtitle: 'Mathematics Midterm · Grade 9 · 42 students', actor: 'RT', time: new Date(Date.now() - 2 * 3600000), status: 'success' },
-  { id: '6', type: 'exam',        title: 'Exam scheduled', subtitle: 'Physics Final · Apr 22 · Hall A & B', actor: 'DL', time: new Date(Date.now() - 3.5 * 3600000), status: 'info' },
-  { id: '7', type: 'assignment',  title: 'Assignment deadline passed', subtitle: 'History Essay · Grade 12 · 6 submissions pending', actor: 'SYS', time: new Date(Date.now() - 5 * 3600000), status: 'warning' },
-  { id: '8', type: 'payment',     title: 'Overdue fee reminder sent', subtitle: '23 students · SMS + Email notifications dispatched', actor: 'SYS', time: new Date(Date.now() - 7 * 3600000), status: 'warning' },
-];
+function buildActivities(): Activity[] {
+  const now = Date.now();
+  return [
+    { id: '1', type: 'enrollment',  title: 'New student enrolled', subtitle: 'Emma Rodriguez — Grade 10A', actor: 'EV', time: new Date(now - 8 * 60000), status: 'success' },
+    { id: '2', type: 'payment',     title: 'Fee payment received', subtitle: '$1,200 — Tuition Q2 · Invoice #INV-202403-0148', actor: 'JS', time: new Date(now - 22 * 60000), status: 'success' },
+    { id: '3', type: 'attendance',  title: 'Attendance marked — Grade 11B', subtitle: '28 present · 2 absent · 1 late', actor: 'MK', time: new Date(now - 45 * 60000), status: 'info' },
+    { id: '4', type: 'alert',       title: 'Low attendance alert', subtitle: 'Alex Chen — 68% (below 75% threshold)', actor: 'SYS', time: new Date(now - 1.2 * 3600000), status: 'warning' },
+    { id: '5', type: 'grade',       title: 'Exam results published', subtitle: 'Mathematics Midterm · Grade 9 · 42 students', actor: 'RT', time: new Date(now - 2 * 3600000), status: 'success' },
+    { id: '6', type: 'exam',        title: 'Exam scheduled', subtitle: 'Physics Final · Apr 22 · Hall A & B', actor: 'DL', time: new Date(now - 3.5 * 3600000), status: 'info' },
+    { id: '7', type: 'assignment',  title: 'Assignment deadline passed', subtitle: 'History Essay · Grade 12 · 6 submissions pending', actor: 'SYS', time: new Date(now - 5 * 3600000), status: 'warning' },
+    { id: '8', type: 'payment',     title: 'Overdue fee reminder sent', subtitle: '23 students · SMS + Email notifications dispatched', actor: 'SYS', time: new Date(now - 7 * 3600000), status: 'warning' },
+  ];
+}
 
 const STATUS_BADGE: Record<string, string> = {
   success: 'bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-400',
@@ -76,7 +79,7 @@ function ActivityItem({ activity }: { activity: Activity }) {
           <Avatar className="h-4 w-4">
             <AvatarFallback className="text-[8px] bg-gray-200">{activity.actor}</AvatarFallback>
           </Avatar>
-          <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+          <span suppressHydrationWarning className="flex items-center gap-1 text-[11px] text-muted-foreground">
             <Clock className="h-2.5 w-2.5" />
             {timeAgo(activity.time)}
           </span>
@@ -87,6 +90,7 @@ function ActivityItem({ activity }: { activity: Activity }) {
 }
 
 export function RecentActivity() {
+  const [activities] = useState<Activity[]>(buildActivities);
   const [visibleCount, setVisibleCount] = useState(5);
 
   return (
@@ -113,10 +117,10 @@ export function RecentActivity() {
           </TabsList>
 
           <TabsContent value="all" className="mt-0 space-y-1">
-            {MOCK_ACTIVITIES.slice(0, visibleCount).map((a) => (
+            {activities.slice(0, visibleCount).map((a) => (
               <ActivityItem key={a.id} activity={a} />
             ))}
-            {visibleCount < MOCK_ACTIVITIES.length && (
+            {visibleCount < activities.length && (
               <div className="pt-2 text-center">
                 <Button
                   variant="ghost"
@@ -124,20 +128,20 @@ export function RecentActivity() {
                   className="text-xs text-muted-foreground w-full"
                   onClick={() => setVisibleCount((c) => c + 5)}
                 >
-                  Load {Math.min(5, MOCK_ACTIVITIES.length - visibleCount)} more
+                  Load {Math.min(5, activities.length - visibleCount)} more
                 </Button>
               </div>
             )}
           </TabsContent>
 
           <TabsContent value="finance" className="mt-0 space-y-1">
-            {MOCK_ACTIVITIES.filter((a) => a.type === 'payment').map((a) => (
+            {activities.filter((a) => a.type === 'payment').map((a) => (
               <ActivityItem key={a.id} activity={a} />
             ))}
           </TabsContent>
 
           <TabsContent value="academic" className="mt-0 space-y-1">
-            {MOCK_ACTIVITIES.filter((a) =>
+            {activities.filter((a) =>
               ['grade', 'exam', 'assignment', 'attendance'].includes(a.type)
             ).map((a) => (
               <ActivityItem key={a.id} activity={a} />
@@ -145,7 +149,7 @@ export function RecentActivity() {
           </TabsContent>
 
           <TabsContent value="alerts" className="mt-0 space-y-1">
-            {MOCK_ACTIVITIES.filter((a) => a.status === 'warning' || a.status === 'error').map(
+            {activities.filter((a) => a.status === 'warning' || a.status === 'error').map(
               (a) => <ActivityItem key={a.id} activity={a} />
             )}
           </TabsContent>
