@@ -1,14 +1,21 @@
 import { Suspense } from 'react';
+import dynamic from 'next/dynamic';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { StatCard } from '@/components/dashboard/StatCard';
 import type { StatCardProps } from '@/components/dashboard/StatCard';
 import { AttendanceChart } from '@/components/dashboard/AttendanceChart';
 import { RevenueChart } from '@/components/dashboard/RevenueChart';
-import { RecentActivity } from '@/components/dashboard/RecentActivity';
 import { QuickActions } from '@/components/dashboard/QuickActions';
 import { TopStudents } from '@/components/dashboard/TopStudents';
 import { UpcomingEvents } from '@/components/dashboard/UpcomingEvents';
 import { Skeleton } from '@/components/ui/skeleton';
+
+// Lazy-loaded: RecentActivity uses date-relative rendering + lots of icon imports
+// Splitting it out saves ~18 KB from the initial JS bundle
+const RecentActivity = dynamic(
+  () => import('@/components/dashboard/RecentActivity').then((m) => ({ default: m.RecentActivity })),
+  { loading: () => <div className="rounded-xl border bg-white dark:bg-gray-900 dark:border-gray-800 h-64 animate-pulse" />, ssr: false }
+);
 import {
   Users,
   UserCheck,

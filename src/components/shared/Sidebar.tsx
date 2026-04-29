@@ -7,7 +7,7 @@ import {
   GraduationCap, LayoutDashboard, Users, UserCheck, BookOpen,
   ClipboardList, Calendar, FileText, DollarSign, Library, Bus,
   Home, MessageSquare, Bell, BarChart3, Settings, ChevronDown,
-  ChevronRight, LogOut, Menu, BookMarked, Award, CreditCard,
+  ChevronRight, LogOut, Menu, BookMarked, Award, CreditCard, Building2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth.store';
@@ -17,6 +17,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { getInitials } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { useFeatures } from '@/contexts/FeaturesContext';
+import type { ModuleKey } from '@/lib/features';
 
 
 interface NavItem {
@@ -24,6 +26,7 @@ interface NavItem {
   href?: string;
   icon: React.ElementType;
   badge?: number;
+  module?: ModuleKey;   // if set, hidden when that module is disabled
   children?: NavItem[];
 }
 
@@ -135,19 +138,26 @@ const ACCOUNTANT_NAV: NavItem[] = [
 ];
 
 const LIBRARIAN_NAV: NavItem[] = [
-  { label: 'Dashboard', href: '/librarian',          icon: LayoutDashboard },
-  { label: 'Books',     href: '/librarian/books',    icon: BookMarked },
+  { label: 'Dashboard',    href: '/librarian',         icon: LayoutDashboard },
+  { label: 'Books',        href: '/librarian/books',   icon: BookMarked },
   { label: 'Issue / Return', href: '/librarian/issue', icon: BookOpen },
-  { label: 'Members',   href: '/librarian/members',  icon: Users },
-  { label: 'Reports',   href: '/librarian/reports',  icon: BarChart3 },
+  { label: 'Members',      href: '/librarian/members', icon: Users },
+  { label: 'Reports',      href: '/librarian/reports', icon: BarChart3 },
+];
+
+// Platform owner nav — no module gating, sees everything
+const SUPER_ADMIN_NAV: NavItem[] = [
+  { label: 'Platform Overview',  href: '/super-admin',                   icon: LayoutDashboard },
+  { label: 'Schools',            href: '/super-admin/schools',           icon: Building2 },
+  { label: 'Subscriptions',      href: '/super-admin/subscriptions',     icon: CreditCard },
 ];
 
 function getNavForRole(role: string | undefined): NavItem[] {
-  if (!role) return ADMIN_NAV;
-  if (['SUPER_ADMIN', 'SCHOOL_ADMIN', 'PRINCIPAL', 'TRANSPORT_MANAGER', 'HOSTEL_WARDEN', 'STAFF'].includes(role)) return ADMIN_NAV;
-  if (role === 'TEACHER') return TEACHER_NAV;
-  if (role === 'STUDENT') return STUDENT_NAV;
-  if (role === 'PARENT')  return PARENT_NAV;
+  if (role === 'SUPER_ADMIN') return SUPER_ADMIN_NAV;
+  if (['SCHOOL_ADMIN', 'PRINCIPAL', 'TRANSPORT_MANAGER', 'HOSTEL_WARDEN', 'STAFF'].includes(role ?? '')) return ADMIN_NAV;
+  if (role === 'TEACHER')    return TEACHER_NAV;
+  if (role === 'STUDENT')    return STUDENT_NAV;
+  if (role === 'PARENT')     return PARENT_NAV;
   if (role === 'ACCOUNTANT') return ACCOUNTANT_NAV;
   if (role === 'LIBRARIAN')  return LIBRARIAN_NAV;
   return ADMIN_NAV;
@@ -219,17 +229,31 @@ function NavItemComponent({ item, depth = 0, onNavigate, rootPrefix }: {
 
 // ─── Sidebar content ───────────────────────────────────────────────────────────
 
+function filterByFeatures(items: NavItem[], isEnabled: (m: ModuleKey) => boolean): NavItem[] {
+  return items
+    .filter((item) => !item.module || isEnabled(item.module))
+    .map((item) => ({
+      ...item,
+      children: item.children ? filterByFeatures(item.children, isEnabled) : undefined,
+    }));
+}
+
 function SidebarContent({ collapsed, onToggleCollapse, onNavigate }: {
   collapsed: boolean; onToggleCollapse: () => void; onNavigate: () => void;
 }) {
   const { user, logout } = useAuthStore();
+  const { isEnabled } = useFeatures();
   const router = useRouter();
-  const navItems = getNavForRole(user?.role);
+  const isSuperAdmin = user?.role === 'SUPER_ADMIN';
+  const rawNav = getNavForRole(user?.role);
+  // Super admin sees all — no feature gating
+  const navItems = isSuperAdmin ? rawNav : filterByFeatures(rawNav, isEnabled);
   const rootPrefix = (user?.role === 'TEACHER' ? 'teacher'
     : user?.role === 'STUDENT' ? 'student'
     : user?.role === 'PARENT' ? 'parent'
     : user?.role === 'ACCOUNTANT' ? 'accountant'
     : user?.role === 'LIBRARIAN' ? 'librarian'
+    : user?.role === 'SUPER_ADMIN' ? 'super-admin'
     : 'admin');
 
   async function handleLogout() {
@@ -248,7 +272,7 @@ function SidebarContent({ collapsed, onToggleCollapse, onNavigate }: {
         {!collapsed && (
           <div className="flex-1 min-w-0">
             <p className="text-sm font-bold text-gray-900 dark:text-white truncate">CampusOS</p>
-            <p className="text-[10px] text-muted-foreground truncate">{user?.schoolName ?? 'School Portal'}</p>
+            <p className="text-[10px] text-muted-foreground truncate">{isSuperAdmin ? 'Platform Admin' : (user?.schoolName ?? 'School Portal')}</p>
           </div>
         )}
         <button
